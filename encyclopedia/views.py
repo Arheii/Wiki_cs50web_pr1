@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from django import forms
@@ -6,7 +6,7 @@ from django import forms
 
 from . import util
 from markdown2 import markdown
-
+from random import choice
 
 class EditPageForm(forms.Form):
     title_form = forms.CharField(widget=forms.TextInput({"class":"form-control font-weight-bold"}))
@@ -26,6 +26,13 @@ def wiki(request, title):
             'title': title,
             'info': markdown(info)
         })
+    else:
+        return render(request, "encyclopedia/error.html", {
+            'message': f"Wiki page for {title} not found",
+            'info': f"but you can <a href={reverse('pedia:new')}>create</a> new"
+             },
+             status=404)
+
 
 
 def search(request):
@@ -34,24 +41,19 @@ def search(request):
 
     # Try to find a file with that name and redirect to wiki pages if found
     if q in list_files:
-        info = util.get_entry(q)
-        if info is not None:
-            return render(request, "encyclopedia/wiki.html", {
-                'title': q,
-                'info': markdown(info)
-            })
+        return HttpResponseRedirect(reverse("pedia:wiki", kwargs={'title':q}))
 
     # looking for files with a keyword
-    q = q.lower()
-    search_results = [file for file in list_files if q in file.lower()]
+    search_results = [file for file in list_files if q.lower() in file.lower()]
     return render(request, "encyclopedia/search.html", {
-        'results': search_results
+        'results': search_results,
+        'search_query': q
     })
 
 
 def random(request):
-    pass
-    return HttpResponse.Redirect((reverse))
+    page = choice(util.list_entries())
+    return HttpResponseRedirect(reverse("pedia:wiki", kwargs={'title':page}))
 
 
 def edit(request, title):
@@ -70,18 +72,15 @@ def edit(request, title):
     info_md = util.get_entry(title)
     if info_md is None:
         # Redirect to create new page
-        print('incorrect page')
         return HttpResponseRedirect(reverse("pedia:new"))
 
-    else:
-        # create and fill form fields. Disable to edit title form.
-        form = EditPageForm(initial={'title_form': title, 'info_form': info_md})
-        form.fields['title_form'].widget.attrs['readonly'] = True
-
-        return render(request, "encyclopedia/edit.html", {
-            'title': title,
-            'form': form
-        })
+    # create and fill form fields. Disable to edit title form.
+    form = EditPageForm(initial={'title_form': title, 'info_form': info_md})
+    form.fields['title_form'].widget.attrs['readonly'] = True
+    return render(request, "encyclopedia/edit.html", {
+        'title': title,
+        'form': form
+    })
 
 
 def new(request):
@@ -95,14 +94,11 @@ def new(request):
                 return HttpResponseRedirect(reverse("pedia:wiki", kwargs={'title':title}))
             else:
                 return render(request, "encyclopedia/error.html", {
-                    'message': f"Page {title} already exists",
-                    'info': ""
-                })
+                    'message': f"Page <b>{title}</b> already exists",
+                    'info': f"you can visit <a href={reverse('pedia:wiki', kwargs={'title':title})}>{title}</a>"
+                    },
+                    status=404)
         else:
-            return render(request, "encyclopedia/new.html", {
-                'form': form
-            })
+            return render(request, "encyclopedia/new.html", {'form': form})
 
-    return render(request, "encyclopedia/new.html", {
-        'form': EditPageForm()
-    })
+    return render(request, "encyclopedia/new.html", {'form': EditPageForm()})
