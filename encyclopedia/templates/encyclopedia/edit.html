@@ -1,0 +1,59 @@
+{% extends "encyclopedia/layout.html" %}
+
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+{% block body %}
+
+
+
+  <div class="row">
+    <div class="col-10 p-3">
+      <form action="{% url 'pedia:edit' title %}">
+        {% csrf_token %}
+        {{ form.info_form }}
+        <div class="form-row">
+          <div class="form-group col-md-10">
+            <div class="form-group">
+              <label for="title_form" class="col-sm-2 col-form-label">Title:</label>
+              <div class="col-sm-4">
+                {% if title %}
+                  <input type="text" class="form-control font-weight-bold" id="title_form" name="title_form" value="{{ title }}" disabled>
+                {% else %}
+                  <input type="text" class="form-control font-weight-bold" id="title_form" name="title_form">
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-md-12">
+            <label for="info_form" class="col-sm-2 col-form-label" >Article:</label>
+            <div class="form-group pl-3">
+              <textarea class="form-control" id="info_form" name="info_form">
+                {{ info_md }}
+              </textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="row justify-content-end">
+          <div class="col-md-2 col-sm-6">
+            <button type="submit" class="btn btn-lightblue border w-100">Save page</button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <!--<div class="col-2 pt-4">-->
+    <!--  <a href="{% url 'pedia:edit' title %}">edit page</a>-->
+    <!--</div>-->
+  </div>
+
+{% endblock %}
+
+
+

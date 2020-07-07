@@ -12,13 +12,18 @@ h1 {
     padding-top: 20px;
 }
 
-textarea {
-    height: 90vh;
-    width: 80%;
+
+#info_form{
+    height: 70vh;
+    /*width: 80%;*/
 }
 
 .main {
     padding: 10px;
+}
+
+.btn-lightblue{
+    background-color: LightSkyBlue;
 }
 
 .search {
