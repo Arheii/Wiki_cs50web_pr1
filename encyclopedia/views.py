@@ -1,5 +1,6 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse
 from django import forms
 
 
@@ -8,8 +9,8 @@ from markdown2 import markdown
 
 
 class EditPageForm(forms.Form):
-    title_form = forms.CharField(label="Title")
-    info_form = forms.CharField(label="Article", widget=forms.Textarea(attrs={'class': "form-control"}))
+    title_form = forms.CharField(widget=forms.TextInput({"class":"form-control font-weight-bold"}))
+    info_form = forms.CharField(widget=forms.Textarea(attrs={'class': "form-control", 'placeholder': "Use markdown syntax"}))
 
 
 def index(request):
@@ -55,11 +56,53 @@ def random(request):
 
 def edit(request, title):
     if request.method == 'POST':
-        pass
+        form = EditPageForm(request.POST)
+        if form.is_valid():
+            content = form.cleaned_data['info_form']
+            util.save_entry(title, content) # Save to file
+            return HttpResponseRedirect(reverse("pedia:wiki", kwargs={'title':title}))
+        else:
+            return render(request, "encyclopedia/edit.html", {
+                'title': title,
+                'form': form
+            })
+
     info_md = util.get_entry(title)
-    if info_md is not None:
+    if info_md is None:
+        # Redirect to create new page
+        print('incorrect page')
+        return HttpResponseRedirect(reverse("pedia:new"))
+
+    else:
+        # create and fill form fields. Disable to edit title form.
+        form = EditPageForm(initial={'title_form': title, 'info_form': info_md})
+        form.fields['title_form'].widget.attrs['readonly'] = True
+
         return render(request, "encyclopedia/edit.html", {
             'title': title,
-            'info_md': info_md,
-            'form': EditPageForm
+            'form': form
         })
+
+
+def new(request):
+    if request.method == 'POST':
+        form = EditPageForm(request.POST)
+        if form.is_valid():
+            content = form.cleaned_data['info_form']
+            title = form.cleaned_data['title_form']
+            if title not in util.list_entries():
+                util.save_entry(title, content) # Save to file
+                return HttpResponseRedirect(reverse("pedia:wiki", kwargs={'title':title}))
+            else:
+                return render(request, "encyclopedia/error.html", {
+                    'message': f"Page {title} already exists",
+                    'info': ""
+                })
+        else:
+            return render(request, "encyclopedia/new.html", {
+                'form': form
+            })
+
+    return render(request, "encyclopedia/new.html", {
+        'form': EditPageForm()
+    })

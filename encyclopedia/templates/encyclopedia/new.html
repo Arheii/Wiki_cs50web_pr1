@@ -1,7 +1,7 @@
 {% extends "encyclopedia/layout.html" %}
 
 {% block title %}
-    {{ title }}
+    Create page
 {% endblock %}
 
 {% block body %}
@@ -10,7 +10,7 @@
 
   <div class="row">
     <div class="col-10 p-3">
-      <form action="{% url 'pedia:edit' title %}" method="post">
+      <form action="{% url 'pedia:new' %}" method="post">
         {% csrf_token %}
 
         <div class="form-row">
@@ -35,12 +35,13 @@
 
         <div class="row justify-content-end">
           <div class="col-md-2 col-sm-6">
-            <button type="submit" class="btn btn-lightblue border w-100">Save page</button>
+            <button type="submit" class="btn btn-lightblue border w-100">Create page</button>
           </div>
         </div>
 
       </form>
     </div>
+
   </div>
 
 {% endblock %}
